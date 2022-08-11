@@ -8,7 +8,8 @@ export const getDifferentMinutes = function(date: Date): number {
 };
 
 export const getAuthString = function(password: string): string {
-  const sha256Hash = crypto.createHmac('sha256', process.env.AUTH_STRING_SECRET);
+  const key = Buffer.from(String(process.env.AUTH_STRING_SECRET));
+  const sha256Hash = crypto.createHmac('sha256', key);
   const sha256 = sha256Hash.update(password).digest('base64url');
   return sha256.slice(0, 32);
 };
