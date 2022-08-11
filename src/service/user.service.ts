@@ -11,6 +11,7 @@ import UserInfoVo from '../vo/user-info.vo';
 import LoginDto from '../dto/login.dto';
 import TaskVo from '../vo/task.vo';
 import { Action, Stage } from '../common/enum';
+import { getAuthString } from '../common/helper';
 
 @Injectable()
 export default class UserService {
@@ -32,23 +33,24 @@ export default class UserService {
    * Users login.
    * @param loginDto
    */
-  async login(loginDto: LoginDto): Promise<UserInfoVo> {
+  async signIn(loginDto: LoginDto): Promise<UserInfoVo> {
     const user = await DB.getRepository(UserEntity)
       .createQueryBuilder()
-      .where({ ...loginDto })
+      .where({ username: loginDto.username })
       .getOne();
 
     if (!user) {
       throw new HttpException('Username does not exist.', HttpStatus.NOT_FOUND);
     }
 
-    const token = jwt.sign({
-      userId: user.id,
-    }, JWT_SECRET);
+    if (user.authString !== getAuthString(loginDto.password)) {
+      throw new HttpException('Password is incorrect.', HttpStatus.FORBIDDEN);
+    }
 
     return {
       userId: user.id,
-      token: token,
+      token: jwt.sign({ userId: user.id }, JWT_SECRET),
+      username: user.username,
     };
   }
 
@@ -74,7 +76,7 @@ export default class UserService {
     if (!userProcess) return null;
 
     const task = await this.taskService.fetchTaskById(userProcess.taskId);
-    return this.taskService.getTaskVo(task);
+    return task ? this.taskService.getTaskVo(task) : null;
   }
 
   /**
@@ -95,13 +97,25 @@ export default class UserService {
 
     // get the selected task, pause it if it's ongoing
     const selectedTask = await this.getSelectedTask(userId);
-    if (selectedTask.stage === Stage.ONGOING) {
-      await this.taskService.updateTaskStage(selectedTask.id, Action.PAUSE);
+    if (selectedTask !== null) {
+      if (selectedTask.stage === Stage.ONGOING) {
+        await this.taskService.updateTaskStage(selectedTask.id, Action.PAUSE);
+      }
     }
 
     return await DB.createQueryBuilder()
       .update(UserProcessEntity)
       .set({ taskId: userProcessDto.taskId })
+      .where('user_id = :userId', { userId })
+      .execute();
+  }
+
+  async removeSelectedTask(): Promise<void> {
+    const userId = this.getUserId();
+
+    await DB.createQueryBuilder()
+      .update(UserProcessEntity)
+      .set({ taskId: null })
       .where('user_id = :userId', { userId })
       .execute();
   }

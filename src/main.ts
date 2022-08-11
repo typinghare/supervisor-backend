@@ -3,6 +3,7 @@ import { SupervisorModule } from './supervisor.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
 import { DB } from './common/database';
+import 'dotenv/config';
 
 /**
  * Bootstrap function.

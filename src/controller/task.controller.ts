@@ -6,7 +6,19 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import TaskService from '../service/task.service';
 import TaskVo from '../vo/task.vo';
 import TaskDto from '../dto/task.dto';
@@ -33,6 +45,16 @@ export default class TaskController {
       return new ResponsePacket('The task has been created.').data(task);
     } catch (error) {
       return new ResponsePacket('Fail to create the task.').handle(error);
+    }
+  }
+
+  @Delete('/:taskId')
+  public async removeTask(@Param('taskId') taskId: number): Promise<ResponsePacket<void>> {
+    try {
+      await this.taskService.removeTask(taskId);
+      return new ResponsePacket('Successfully remove the task.');
+    } catch (error) {
+      return new ResponsePacket('Fail to remove task.').handle(error);
     }
   }
 
@@ -99,14 +121,14 @@ export default class TaskController {
   @HttpCode(HttpStatus.CREATED)
   @ApiCreatedResponse({
     description: 'The comment has been posted.',
-    type: null,
+    type: TaskCommentVo,
   })
   @ApiInternalServerErrorResponse({ description: 'Fail to post the comment.' })
-  public async postComment(@Param('taskId') taskId: number, @Body() taskCommentDto: TaskCommentDto): Promise<ResponsePacket<void>> {
+  public async postComment(@Param('taskId') taskId: number, @Body() taskCommentDto: TaskCommentDto): Promise<ResponsePacket<TaskCommentVo>> {
     try {
       taskCommentDto.taskId = taskId;
-      await this.taskService.postComment(taskCommentDto);
-      return new ResponsePacket('The comment has been posted.');
+      const comment = await this.taskService.postComment(taskCommentDto);
+      return new ResponsePacket('The comment has been posted.').data(comment);
     } catch (error) {
       return new ResponsePacket('Fail to post the comment.').handle(error);
     }

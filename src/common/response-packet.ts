@@ -71,7 +71,8 @@ export default class ResponsePacket<D = undefined> {
     this._error = error;
 
     if (error instanceof HttpException) {
-      this.message(error.message);
+      error.message = this._message;
+      throw error;
     }
 
     if (parseInt(process.env.ENVIRONMENT) in [Environment.DEVELOPMENT, Environment.TEST]) {

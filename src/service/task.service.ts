@@ -11,7 +11,7 @@ import TaskCommentVo from '../vo/task-comment.vo';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 import { DATE_FORMAT } from '../common/constant';
-import { getDifferentMinutes } from '../common/helper';
+import { getDate, getDifferentMinutes } from '../common/helper';
 
 @Injectable()
 export default class TaskService {
@@ -92,9 +92,9 @@ export default class TaskService {
 
     if (!insertResult) throw new HttpException('Insertion result is missing.', HttpStatus.INTERNAL_SERVER_ERROR);
 
-    // automatically switch to this task if the stage of selected class is ENDED
+    // automatically switch to this task if no selected task or the stage of selected class is ENDED
     const selectedTask = await this.userService.getSelectedTask(userId);
-    if (selectedTask != null && selectedTask.stage == Stage.ENDED) {
+    if (selectedTask === null || selectedTask.stage == Stage.ENDED) {
       await this.userService.switchTask({ taskId: getId(insertResult) });
     }
 
@@ -111,8 +111,16 @@ export default class TaskService {
       stage: taskDto.stage,
     }, _.isUndefined);
 
-    const startDateTime = moment(taskDto.selectedDate, DATE_FORMAT).startOf('day').toDate();
-    const endDateTime = moment(taskDto.selectedDate, DATE_FORMAT).endOf('day').toDate();
+    let startDateTime, endDateTime;
+
+    if (getDate(taskDto.selectedDate) === new Date()) {
+      // it is today
+      startDateTime = moment().subtract(24, 'hours').toDate();
+      endDateTime = moment().toDate();
+    } else {
+      startDateTime = moment(taskDto.selectedDate, DATE_FORMAT).startOf('day').toDate();
+      endDateTime = moment(taskDto.selectedDate, DATE_FORMAT).endOf('day').toDate();
+    }
 
     const tasks = await DB.getRepository(TaskEntity)
       .createQueryBuilder('task')
@@ -250,13 +258,16 @@ export default class TaskService {
       .set({ deletedAt: new Date() })
       .where({ id: taskId })
       .execute();
+
+    // remove selected task
+    await this.userService.removeSelectedTask();
   }
 
   /**
    * User posts a comment to a task.
    * @param taskCommentDto
    */
-  public async postComment(taskCommentDto: TaskCommentDto): Promise<void> {
+  public async postComment(taskCommentDto: TaskCommentDto): Promise<TaskCommentVo> {
     const task = await this.fetchTaskById(taskCommentDto.taskId);
     if (!task) {
       throw new HttpException('The task is not found.', HttpStatus.NOT_FOUND);
@@ -266,11 +277,13 @@ export default class TaskService {
       throw new HttpException('You cannot update a task which is not yours.', HttpStatus.FORBIDDEN);
     }
 
-    await DB.createQueryBuilder()
+    const result = await DB.createQueryBuilder()
       .insert()
       .into(TaskCommentEntity)
       .values({ ...taskCommentDto, createdAt: new Date(), updatedAt: new Date() })
       .execute();
+
+    return await this.fetchComment(getId(result));
   }
 
   /**

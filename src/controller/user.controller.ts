@@ -1,5 +1,5 @@
 import { ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Put, Query } from '@nestjs/common';
 import UserService from '../service/user.service';
 import UserProcessDto from '../dto/user-process.dto';
 import ResponsePacket from '../common/response-packet';
@@ -14,13 +14,13 @@ export default class UserController {
   public constructor(private userService: UserService) {
   }
 
-  @Post('/login')
-  public async login(@Body() loginDto: LoginDto): Promise<ResponsePacket<UserInfoVo>> {
+  @Put('/')
+  public async signIn(@Body() loginDto: LoginDto): Promise<ResponsePacket<UserInfoVo>> {
     try {
-      const userInfo = await this.userService.login(loginDto);
-      return new ResponsePacket('User logins in.').data(userInfo);
+      const userInfo = await this.userService.signIn(loginDto);
+      return new ResponsePacket('User successfully signs in.').data(userInfo);
     } catch (error) {
-      return new ResponsePacket('Fail to login in.').handle(error);
+      return new ResponsePacket('Fail to sign in.').handle(error);
     }
   }
 
@@ -46,13 +46,13 @@ export default class UserController {
     description: 'The selected task has been fetched.',
     type: TaskVo,
   })
-  @ApiInternalServerErrorResponse({ description: 'Fail to get the selected task.' })
-  public async fetchSelectedTask(@Query('userId') userId: number): Promise<ResponsePacket<TaskVo>> {
+  @ApiInternalServerErrorResponse({ description: 'Fail to fetch the selected task.' })
+  public async fetchSelectedTask(@Query('userId') userId: number): Promise<ResponsePacket<TaskVo | null>> {
     try {
       const selectedTask = await this.userService.getSelectedTask(userId);
       return new ResponsePacket('The selected task has been fetched.').data(selectedTask);
     } catch (error) {
-      return new ResponsePacket('Fail to get the selected task.').handle(error);
+      return new ResponsePacket('Fail to fetch the selected task.').handle(error);
     }
   }
 

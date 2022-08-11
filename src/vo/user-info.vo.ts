@@ -6,4 +6,7 @@ export default class UserInfoVo {
 
   @ApiProperty({ description: 'The JWT (Json Web Token).' })
   token: string;
+
+  @ApiProperty({ description: 'The username of the user.' })
+  username: string;
 }
