@@ -1,4 +1,3 @@
-import TaskService from './task.service';
 import * as moment from 'moment';
 import { Moment } from 'moment/moment';
 import { DB } from '../common/database';
@@ -11,9 +10,6 @@ export type SubjectDurationItem = {
 };
 
 export default class StatisticsService {
-  public constructor(private taskService: TaskService) {
-  }
-
   /**
    * Fetches duration aggregation data of last week.
    * @param userId
@@ -55,6 +51,10 @@ export default class StatisticsService {
   }
 
   public async fetchLastWeekSubjectDuration(userId: number): Promise<SubjectDurationItem[]> {
+    const today = moment();
+    const startDateTime = moment(today).subtract(6, 'days').startOf('day').toDate();
+    const endDateTime = today.toDate();
+
     const result = await DB.getRepository(TaskEntity)
       .createQueryBuilder('task')
       .leftJoinAndSelect('task.category', 'category')
@@ -62,7 +62,8 @@ export default class StatisticsService {
       .select('`subject`.name AS subjectName, SUM(task.duration) AS durationSum')
       .groupBy('subject.name')
       .where({ userId })
-      .where('task.stage = :stage', { stage: Stage.ENDED })
+      .andWhere('task.stage = :stage', { stage: Stage.ENDED })
+      .andWhere('task.ended_at BETWEEN :startDateTime AND :endDateTime', { startDateTime, endDateTime })
       .getRawMany();
 
     result.forEach(item => {
