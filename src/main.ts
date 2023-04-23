@@ -4,40 +4,41 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
 import { DB } from './common/database';
 import 'dotenv/config';
+import { LISTENING_PORT } from './common/constant';
 
 /**
  * Bootstrap function.
  */
 async function bootstrap(): Promise<void> {
-  // create Nest App
-  const supervisorApp = await NestFactory.create(SupervisorModule);
-  supervisorApp.enableCors();
+    // create Nest App (HTTPS)
+    const supervisorApp = await NestFactory.create(SupervisorModule);
+    supervisorApp.enableCors();
+    supervisorApp.setGlobalPrefix('/supervisor/api');
 
-  // NestJS log
-  const logger = new Logger();
+    // NestJS log
+    const logger = new Logger();
 
-  // TypeORM
-  try {
-    await DB.initialize();
-    logger.log('TypeORM module has been initialized.', 'TypeORM');
-  } catch (e) {
-    logger.log('Error during TypeORM module initialization.', 'TypeORM');
-  }
+    // TypeORM
+    try {
+        await DB.initialize();
+        logger.log('TypeORM module has been initialized.', 'TypeORM');
+    } catch (e) {
+        logger.log('Error during TypeORM module initialization.', 'TypeORM');
+    }
 
-  // Swagger
-  const config = new DocumentBuilder()
-    .setTitle('Supervisor 2')
-    .setDescription('Supervisor 2 Open API documentation.')
-    .setVersion('2.1.0')
-    .addTag('supervisor')
-    .build();
-  const document = SwaggerModule.createDocument(supervisorApp, config);
-  SwaggerModule.setup('supervisor/api', supervisorApp, document);
+    // Swagger
+    const config = new DocumentBuilder()
+        .setTitle('Supervisor 2')
+        .setDescription('Supervisor 2 Open API documentation.')
+        .setVersion('2.1.0')
+        .addTag('supervisor')
+        .build();
+    const document = SwaggerModule.createDocument(supervisorApp, config);
+    SwaggerModule.setup('/supervisor/api/swagger', supervisorApp, document);
 
-  // listen
-  const listenPort = 3000;
-  await supervisorApp.listen(listenPort);
-  logger.log(`NestJS is listening on ${listenPort} ...`, 'Listening');
+    // listen to the port
+    await supervisorApp.listen(LISTENING_PORT);
+    logger.log(`NestJS is listening on ${LISTENING_PORT} ...`, 'Listening');
 }
 
 bootstrap().then();

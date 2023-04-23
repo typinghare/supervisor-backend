@@ -1,3 +1,3 @@
 export type LastWeekDurationAggregationVo = {
-  0: number;
+    0: number;
 }

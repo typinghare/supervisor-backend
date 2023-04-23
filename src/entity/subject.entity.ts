@@ -3,13 +3,13 @@ import CategoryEntity from './category.entity';
 
 @Entity('subject')
 export default class SubjectEntity {
-  @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
-  @OneToMany(() => CategoryEntity, category => category.subjectId)
-  id: number;
+    @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
+    @OneToMany(() => CategoryEntity, category => category.subjectId)
+    id: number;
 
-  @Column({ type: 'bigint', unsigned: true })
-  userId: number;
+    @Column({ type: 'bigint', unsigned: true })
+    userId: number;
 
-  @Column({ type: 'varchar', length: 32 })
-  name: string;
+    @Column({ type: 'varchar', length: 32 })
+    name: string;
 }
