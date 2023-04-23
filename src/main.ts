@@ -18,6 +18,8 @@ async function bootstrap(): Promise<void> {
     // NestJS log
     const logger = new Logger();
 
+    const ignore = 1;
+
     // TypeORM
     try {
         await DB.initialize();
