@@ -11,7 +11,7 @@ export const DB = new DataSource({
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE_DATABASE,
     namingStrategy: new SnakeNamingStrategy(),
-    entities: ['src/entities/*.ts'],
+    entities: [__dirname + '/../**/*.entity.js'],
     logging: parseInt(process.env.ENVIRONMENT) in [Environment.DEVELOPMENT, Environment.TEST],
     logger: 'file',
     maxQueryExecutionTime: 1000,
