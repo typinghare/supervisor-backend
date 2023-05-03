@@ -23,6 +23,7 @@ async function bootstrap(): Promise<void> {
         await DB.initialize();
         logger.log('TypeORM module has been initialized.', 'TypeORM');
     } catch (e) {
+        console.log(e.message);
         logger.log('Error during TypeORM module initialization.', 'TypeORM');
     }
 
