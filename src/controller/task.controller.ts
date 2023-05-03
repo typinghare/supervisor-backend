@@ -94,6 +94,7 @@ export default class TaskController {
             const tasks = await this.taskService.fetchTaskPaged(taskDto);
             return new ResponsePacket('The tasks have been fetched.').data(tasks);
         } catch (error) {
+            console.log(error.message);
             return new ResponsePacket('Fail to fetch tasks.').handle(error);
         }
     }

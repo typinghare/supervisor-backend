@@ -30,6 +30,7 @@ export default class SubjectController {
             const subjects = await this.subjectService.fetchSubjects(userId);
             return new ResponsePacket('All subjects are fetched.').data(subjects);
         } catch (error) {
+            console.log(error.message);
             return new ResponsePacket('Fail to fetch subjects').handle(error);
         }
     }
