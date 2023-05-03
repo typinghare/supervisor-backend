@@ -13,12 +13,10 @@ async function bootstrap(): Promise<void> {
     // create Nest App (HTTPS)
     const supervisorApp = await NestFactory.create(SupervisorModule);
     supervisorApp.enableCors();
-    supervisorApp.setGlobalPrefix('/supervisor/api');
+    supervisorApp.setGlobalPrefix('/api');
 
     // NestJS log
     const logger = new Logger();
-
-    const ignore = 1;
 
     // TypeORM
     try {
@@ -36,7 +34,7 @@ async function bootstrap(): Promise<void> {
         .addTag('supervisor')
         .build();
     const document = SwaggerModule.createDocument(supervisorApp, config);
-    SwaggerModule.setup('/supervisor/api/swagger', supervisorApp, document);
+    SwaggerModule.setup('/api/swagger', supervisorApp, document);
 
     // listen to the port
     await supervisorApp.listen(LISTENING_PORT);
